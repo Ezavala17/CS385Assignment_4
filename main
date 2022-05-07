@@ -1,0 +1,93 @@
+
+"use strict";
+
+var gl;
+var t = 0.0;
+const HoursPerDay = 24;
+const HoursPerYear = 365.25 * HoursPerDay;
+
+function init() {
+    var canvas = document.getElementById("webgl-canvas");
+    gl = canvas.getContext("webgl2");
+    
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.DEPTH_TEST);
+   
+    // Add your sphere creation and configuration code here
+
+    near = .10;
+    far = 1000;
+
+    Sun = new Sphere();
+    Earth = new Sphere();
+    Moon = new Sphere();
+
+    Sun.color = [1,0,0,1];
+    Earth.color = [1,1,0,1];
+    Moon.color = [1,1,1,1];
+
+    Sun.radius = 696340;
+    Earth.radius = 6371;
+    Moon.radius = 148;
+
+    Earth.orbit = 1200000;
+    Moon.orbit = 60000;
+    
+    Earth.distance = 1200;
+    Moon.distance = 120000;
+
+
+
+    
+    P = perspective(30, canvas.clientWidth/ canvas.clientHeight, near, far);
+    Sun.P = P;
+    Earth.P = P;
+    Moon.P = P;
+
+    requestAnimationFrame(render);
+}
+
+function render() {
+
+    // Update your motion variables here
+
+    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    
+
+    t += 1;
+
+    var day = t / HoursPerYear * 360;
+    var hour = t % HoursPerDay * 360;
+
+    ms = new MatrixStack();
+    V = translate(0.0, 0.0, -0.5*(near + far));
+    ms.load(V)
+
+    ms.push();
+    ms.scale(Sun.radius);
+    Sun.MV = ms.current();
+    Sun.render();
+    ms.pop();
+
+
+    ms.push();
+    ms.rotate(day, [0,1,0]);
+    ms.translate(Earth.distance, 0, 0);
+    ms.push();
+    ms.rotate(hour, [0,1,0]);
+    ms.scale(Earth.radius);
+    Earth.MV = ms.current()
+    Earth.render();
+    ms.pop();
+    ms.translate(Moon.distance, 0, 0);
+    ms.scale(Moon.radius);
+    Moon.MV = ms.current();
+    Moon.render();
+    ms.pop();
+    requestAnimationFrame(render);
+
+
+}
+
+window.onload = init;
